@@ -1,19 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as yup from "yup";
+import axios from "axios";
+import Input from "./common/Input";
+import RadioBtn from "./common/RadioBtn";
+import Selector from "./common/Selector";
 
 const SignUp = () => {
   const [data, setData] = useState(null);
 
-  const saveData = {
-    name: "milad",
-    email: "amir@mm.com",
-    phone: "11111111111",
-    password: "sss",
-    passwordConfirm: "sss",
-    gender: "0",
-  };
-  console.log(data);
+  // const saveData = {
+  //   name: "milad",
+  //   email: "amir@mm.com",
+  //   phone: "11111111111",
+  //   password: "sss",
+  //   passwordConfirm: "sss",
+  //   gender: "0",
+  // };
+
+  const radioOptions = [
+    { data: "gender", name: "male", value: "0" },
+    { data: "gender", name: "female", value: "1" },
+  ];
+  const selectOption = [
+    { label: "Entekhab konid...", value: "" },
+    { label: "iran", value: "iran" },
+    { label: "usa", value: "usa" },
+    { label: "ireland", value: "ireland" },
+  ];
 
   const initialValues = {
     name: "",
@@ -22,6 +36,7 @@ const SignUp = () => {
     password: "",
     passwordConfirm: "",
     gender: "",
+    keshvar: "",
   };
   const phoneRegExp = /^[0-9]{11}$/;
 
@@ -40,20 +55,32 @@ const SignUp = () => {
       .string()
       .oneOf([yup.ref("password"), null], "Passwords must match"),
     gender: yup.string().required("vajeb"),
+    keshvar: yup.string().required("meliyat ra entekhab kon"),
   });
 
   const formik = useFormik({
     initialValues: data || initialValues,
-    onSubmit: (values) => console.log(values),
+    onSubmit: (values) => {
+      console.log(values);
+      axios.post("http://localhost:3001/users", values);
+    },
     validationSchema,
     validateOnMount: true,
     enableReinitialize: true,
   });
+  useEffect(() => {
+    axios
+      .get("http://localhost:3001/users/1")
+      .then((res) => {
+        setData(res.data);
+      })
+      .catch((err) => console.log(err));
+  }, []);
   return (
     <div>
       <form className="boxForm" onSubmit={formik.handleSubmit}>
         <div className="textInput">
-          <label htmlFor="name">Name</label>
+          {/* <label htmlFor="name">Name</label>
           <input
             id="name"
             name="name"
@@ -63,7 +90,10 @@ const SignUp = () => {
           />
           {formik.errors.name && formik.touched.name && (
             <div>{formik.errors.name}</div>
-          )}
+          )} */}
+
+          {/* ساده سازی input */}
+          <Input name="name" formik={formik} label="Name" />
         </div>
         <div className="textInput">
           <label htmlFor="email">Email</label>
@@ -117,8 +147,25 @@ const SignUp = () => {
             <div>{formik.errors.passwordConfirm}</div>
           )}
         </div>
+
+        <div>
+          {/*  -ساده سازی رادیو باتن ها- */}
+          {radioOptions.map((i) => {
+            return (
+              <RadioBtn
+                key={i.name}
+                formik={formik}
+                name={i.name}
+                value={i.value}
+                data={i.data}
+                label={i.name}
+              />
+            );
+          })}
+        </div>
+
         <div className="radioBox">
-          <div className="radio">
+          {/* <div className="radio">
             <input
               type="radio"
               checked={formik.values.gender === "0"}
@@ -139,12 +186,21 @@ const SignUp = () => {
               onChange={formik.handleChange}
             />
             <label htmlFor="1">female</label>
-          </div>
+          </div> */}
+        </div>
+        <div>
+          <Selector
+            name="keshvar"
+            selectOption={selectOption}
+            formik={formik}
+          />
         </div>
         <button type="submit" disabled={!formik.isValid}>
           Submit
         </button>
-        <button onClick={() => setData(saveData)}>add data</button>
+        {/* <button type="button" onClick={() => setData(saveData)}>
+          add data
+        </button> */}
       </form>
     </div>
   );
